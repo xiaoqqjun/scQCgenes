@@ -12,14 +12,7 @@
 ## Installation
 
 ```r
-# Install from local source
-install.packages("path/to/scQCgenes", repos = NULL, type = "source")
-
-# Or using devtools
-devtools::install_local("path/to/scQCgenes")
-
-# If sharing via GitHub (future)
-# devtools::install_github("username/scQCgenes")
+devtools::install_github("xiaoqqjun/scQCgenes")
 ```
 
 ## Quick Start
