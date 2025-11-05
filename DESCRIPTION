@@ -2,7 +2,10 @@ Package: scQCgenes
 Type: Package
 Title: Quality Control Gene Filtering for Single Cell RNA-seq Data
 Version: 0.1.0
-Authors@R: person("User", "Name", email = "user@example.com", role = c("aut", "cre"))
+Authors@R: person("xiaoqqjun", 
+           email = "xiaoqqjun@sina.com", 
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-1813-1669"))
 Description: Identifies and filters quality control genes in single-cell RNA-seq data,
     including mitochondrial genes, ribosomal genes, cell cycle genes, and predicted genes
     (Rik and Gm genes in mouse). Supports both Seurat and SingleCellExperiment objects.
