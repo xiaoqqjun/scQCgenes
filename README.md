@@ -251,7 +251,7 @@ If you use `scQCgenes` in your research, please cite:
 ```
 scQCgenes: Quality Control Gene Filtering for Single-Cell RNA-seq
 Version 0.1.0
-https://github.com/username/scQCgenes
+https://github.com/xiaoqqjun/scQCgenes
 ```
 
 ## License
