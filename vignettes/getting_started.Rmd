@@ -1,0 +1,270 @@
+---
+title: "Getting Started with scQCgenes"
+author: "scQCgenes Package"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with scQCgenes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+`scQCgenes` is designed to help identify and filter quality control genes in single-cell RNA-seq data. This vignette demonstrates the main functions and typical workflows.
+
+## Installation
+
+```{r eval=FALSE}
+# Install from local source
+install.packages("path/to/scQCgenes", repos = NULL, type = "source")
+
+# Or using devtools
+devtools::install_local("path/to/scQCgenes")
+```
+
+## Load Package
+
+```{r eval=FALSE}
+library(scQCgenes)
+library(Seurat)
+```
+
+## Basic Usage
+
+### 1. Identify QC Genes
+
+The main function `identify_qc_genes()` identifies different types of QC genes:
+
+```{r eval=FALSE}
+# Example with a Seurat object
+gene_names <- rownames(seurat_obj)
+
+# Identify mitochondrial and ribosomal genes
+qc_genes <- identify_qc_genes(
+  gene_names = gene_names,
+  remove_types = c("mito", "ribo"),
+  species = "mouse"
+)
+
+head(qc_genes)
+```
+
+### 2. Filter Seurat Object
+
+Use `filter_seurat_genes()` to directly filter your Seurat object:
+
+```{r eval=FALSE}
+# Basic filtering
+filtered_obj <- filter_seurat_genes(
+  seurat_obj = seurat_obj,
+  remove_types = c("mito", "ribo")
+)
+
+# With detailed output
+result <- filter_seurat_genes(
+  seurat_obj = seurat_obj,
+  remove_types = c("mito", "ribo", "rik", "gm"),
+  return_removed_genes = TRUE
+)
+
+# Access components
+filtered_obj <- result$seurat_obj
+removed_genes <- result$removed_genes
+summary_stats <- result$summary
+```
+
+### 3. Visualize QC Genes
+
+```{r eval=FALSE}
+# Plot gene counts
+plot_qc_stats(
+  gene_names = rownames(seurat_obj),
+  remove_types = c("mito", "ribo", "cell_cycle", "rik", "gm"),
+  species = "mouse"
+)
+
+# Plot as percentages
+plot_qc_stats(
+  gene_names = rownames(seurat_obj),
+  plot_type = "percentage"
+)
+```
+
+### 4. Get Summary Statistics
+
+```{r eval=FALSE}
+# Print summary table
+summary_qc_genes(
+  gene_names = rownames(seurat_obj),
+  remove_types = c("mito", "ribo", "cell_cycle", "rik", "gm"),
+  species = "mouse"
+)
+```
+
+## Complete Workflow Example
+
+### Mouse scRNA-seq Analysis
+
+```{r eval=FALSE}
+library(scQCgenes)
+library(Seurat)
+
+# Load data
+seurat_obj <- readRDS("mouse_scRNA.rds")
+
+# Step 1: Check QC gene statistics before filtering
+cat("Before filtering:\n")
+summary_qc_genes(rownames(seurat_obj), species = "mouse")
+
+# Step 2: Visualize QC genes
+plot_qc_stats(rownames(seurat_obj), species = "mouse")
+
+# Step 3: Filter the object
+result <- filter_seurat_genes(
+  seurat_obj = seurat_obj,
+  remove_types = c("mito", "ribo", "rik", "gm"),
+  species = "mouse",
+  return_removed_genes = TRUE
+)
+
+# Step 4: Check results
+print(result$summary)
+cat("\nGenes removed by type:\n")
+table(result$removed_genes$Type)
+
+# Step 5: Continue with standard Seurat workflow
+filtered_obj <- result$seurat_obj
+filtered_obj <- NormalizeData(filtered_obj)
+filtered_obj <- FindVariableFeatures(filtered_obj)
+filtered_obj <- ScaleData(filtered_obj)
+filtered_obj <- RunPCA(filtered_obj)
+filtered_obj <- FindNeighbors(filtered_obj)
+filtered_obj <- FindClusters(filtered_obj)
+filtered_obj <- RunUMAP(filtered_obj, dims = 1:30)
+```
+
+### Human scRNA-seq Analysis
+
+```{r eval=FALSE}
+# For human data
+human_result <- filter_seurat_genes(
+  seurat_obj = human_seurat_obj,
+  remove_types = c("mito", "ribo", "cell_cycle"),
+  species = "human",
+  return_removed_genes = TRUE
+)
+```
+
+## Gene Type Details
+
+### Mitochondrial Genes
+
+- **Mouse**: `mt-` or `Mt-` prefix
+- **Human**: `MT-` prefix
+- Examples: mt-Nd1, mt-Cytb, MT-CO1
+
+### Ribosomal Genes
+
+- **Mouse**: `Rpl` or `Rps` prefix
+- **Human**: `RPL` or `RPS` prefix
+- Examples: Rpl5, Rps3, RPL7
+
+### Cell Cycle Genes
+
+- S phase and G2M phase markers
+- From Seurat's 2019 updated list
+- Examples: Top2a, Mki67, PCNA
+
+### Rik Genes (Mouse Only)
+
+RIKEN cDNA clones - predicted genes without experimental validation:
+
+- Pattern: Ends with `Rik` or `Rik` + digits
+- Examples: 9530026P05Rik, 2900026A02Rik
+- **NOT matched**: Grik2, Grik3 (lowercase rik)
+
+### Gm Genes (Mouse Only)
+
+Predicted genes in mouse genome:
+
+- Pattern: `Gm` followed by digits
+- Examples: Gm9968, Gm17135
+- **NOT matched**: Gmap, Gmat (no digits after Gm)
+
+## Advanced Usage
+
+### Custom Gene Lists
+
+```{r eval=FALSE}
+# Get genes as a list grouped by type
+qc_list <- identify_qc_genes(
+  gene_names = rownames(seurat_obj),
+  remove_types = c("mito", "ribo", "rik", "gm"),
+  return_list = TRUE
+)
+
+# Access specific types
+mito_genes <- qc_list$mito
+rik_genes <- qc_list$rik
+
+# Use for custom filtering
+custom_genes_to_remove <- c(qc_list$mito, qc_list$ribo)
+filtered_obj <- subset(seurat_obj, features = setdiff(rownames(seurat_obj), custom_genes_to_remove))
+```
+
+### Filter Expression Matrix
+
+```{r eval=FALSE}
+# If working with raw matrices
+expr_matrix <- GetAssayData(seurat_obj, slot = "counts")
+
+filtered_matrix <- filter_expression_matrix(
+  expr_matrix = expr_matrix,
+  remove_types = c("mito", "ribo")
+)
+```
+
+## Best Practices
+
+1. **Always check statistics first**: Use `summary_qc_genes()` before filtering
+2. **Visualize**: Use `plot_qc_stats()` to understand gene composition
+3. **Save both versions**: Keep both filtered and unfiltered objects
+4. **Document filtering**: Save the list of removed genes
+5. **Species-specific**: Always specify correct species
+6. **Context matters**: Cell cycle filtering depends on your research question
+
+## Common Pitfalls
+
+### Don't Remove Cell Cycle Genes for Cell Cycle Studies
+
+```{r eval=FALSE}
+# For cell cycle analysis, don't remove cell cycle genes
+filtered_obj <- filter_seurat_genes(
+  seurat_obj,
+  remove_types = c("mito", "ribo", "rik", "gm")  # No "cell_cycle"
+)
+```
+
+### Check Species
+
+```{r eval=FALSE}
+# Wrong: Using mouse patterns for human data
+filter_seurat_genes(human_obj, species = "mouse")  # Wrong!
+
+# Correct
+filter_seurat_genes(human_obj, species = "human")  # Correct
+```
+
+## Session Info
+
+```{r eval=FALSE}
+sessionInfo()
+```

@@ -1,0 +1,22 @@
+Package: scQCgenes
+Type: Package
+Title: Quality Control Gene Filtering for Single Cell RNA-seq Data
+Version: 0.1.0
+Authors@R: person("User", "Name", email = "user@example.com", role = c("aut", "cre"))
+Description: Identifies and filters quality control genes in single-cell RNA-seq data,
+    including mitochondrial genes, ribosomal genes, cell cycle genes, and predicted genes
+    (Rik and Gm genes in mouse). Supports both Seurat and SingleCellExperiment objects.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 4.0.0)
+Imports:
+    stringr,
+    dplyr,
+    Seurat,
+    ggplot2
+Suggests:
+    SingleCellExperiment,
+    testthat (>= 3.0.0)
+RoxygenNote: 7.2.3
